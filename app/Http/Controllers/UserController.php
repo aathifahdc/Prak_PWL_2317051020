@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -8,30 +7,55 @@ use App\Models\Kelas;
 
 class UserController extends Controller
 {
-    // Menampilkan form
+    public function index()
+    {
+        $users = UserModel::with('kelas')->get();
+        return view('list_user', compact('users'));
+    }
+
     public function create()
     {
         $kelas = Kelas::all();
-        return view('create_user', ['kelas' => $kelas, 'title' => 'Tambah Pengguna']);
+        return view('create_user', compact('kelas'));
     }
 
-    // Menyimpan data
     public function store(Request $request)
     {
-        $user = new UserModel();
-        $user->nama = $request->nama;
-        $user->npm = $request->npm; 
-        $user->kelas_id = $request->kelas_id;
-        $user->save();
+        $request->validate([
+            'nama' => 'required',
+            'npm' => 'required|unique:users,npm',
+            'kelas_id' => 'required|exists:kelas,id'
+        ]);
 
-        return redirect()->route('user.index');
+        UserModel::create($request->only('nama','npm','kelas_id'));
+        return redirect()->route('list_user')->with('success', 'User berhasil ditambahkan');
     }
 
-    // Menampilkan daftar user
-    public function index()
-    {
-        $users = UserModel::getUser();
-        return view('list_user', ['users' => $users, 'title' => 'Daftar Pengguna']);
-    }
+public function edit($uuid)
+{
+    $user = UserModel::where('uuid', $uuid)->firstOrFail();
+    $kelas = Kelas::all();
+    return view('edit_user', compact('user','kelas'));
 }
 
+public function update(Request $request, $uuid)
+{
+    $user = UserModel::where('uuid', $uuid)->firstOrFail();
+    $request->validate([
+        'nama' => 'required',
+        'npm' => 'required|unique:users,npm,' . $user->id,
+        'kelas_id' => 'required|exists:kelas,id'
+    ]);
+
+    $user->update($request->only('nama','npm','kelas_id'));
+    return redirect()->route('list_user')->with('success', 'User berhasil diupdate');
+}
+
+public function destroy($uuid)
+{
+    $user = UserModel::where('uuid', $uuid)->firstOrFail();
+    $user->delete();
+    return redirect()->route('list_user')->with('success', 'User berhasil dihapus');
+}
+
+}

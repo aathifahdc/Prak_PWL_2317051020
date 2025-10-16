@@ -3,19 +3,28 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class UserModel extends Model
 {
     protected $table = 'users';
-    protected $fillable = ['nama', 'nim', 'kelas_id'];
+    protected $primaryKey = 'uuid';
+    public $incrementing = false;
+    protected $keyType = 'string';
+    protected $fillable = ['nama','npm','kelas_id'];
 
-    public static function getUser()
+    protected static function boot()
     {
-        return DB::table('users')
-            ->join('kelas', 'users.kelas_id', '=', 'kelas.id')
-            ->select('users.*', 'kelas.nama_kelas')
-            ->get();
+        parent::boot();
+        static::creating(function ($model) {
+            if (empty($model->uuid)) {
+                $model->uuid = (string) Str::uuid();
+            }
+        });
+    }
+
+      public function kelas()
+    {
+        return $this->belongsTo(Kelas::class, 'kelas_id', 'id');
     }
 }
-
