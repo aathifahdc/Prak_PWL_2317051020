@@ -2,21 +2,31 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Kelas extends Model
 {
-    use HasFactory;
+    protected $table = 'kelas';
 
-    protected $guarded = ['id'];
+    protected $keyType = 'string';
+    public $incrementing = false;
 
-    public function user()
+    protected $fillable = ['id', 'nama_kelas'];
+
+    protected static function boot()
     {
-        return $this->hasMany(UserModel::class, 'kelas_id');
+        parent::boot();
+        static::creating(function ($model) {
+            if (!$model->id) {
+                $model->id = (string) Str::uuid();
+            }
+        });
     }
 
-    public function getKelas(){
-        return $this->all();
+    // Relasi ke User
+    public function users()
+    {
+        return $this->hasMany(User::class, 'kelas_id', 'id');
     }
 }

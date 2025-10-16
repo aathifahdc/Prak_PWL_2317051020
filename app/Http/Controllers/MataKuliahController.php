@@ -7,27 +7,65 @@ use App\Models\MataKuliah;
 
 class MataKuliahController extends Controller
 {
-        public function index()
+    // Menampilkan daftar mata kuliah
+    public function index()
     {
-        $data = [
-            'title' => 'List Mata Kuliah',
-            'mks' => MataKuliah::all(),
-        ];
-        return view('list_mk', $data);
+        $mataKuliahs = MataKuliah::all();
+        return view('list_mk', compact('mataKuliahs'));
     }
 
+    // Menampilkan form tambah data mata kuliah
     public function create()
     {
-        return view('create_mk', ['title' => 'Create Mata Kuliah']);
+        return view('create_mk');
     }
 
+    // Menyimpan data baru ke database
     public function store(Request $request)
     {
-        MataKuliah::create([
-            'nama_mk' => $request->input('nama_mk'),
-            'sks' => $request->input('sks'),
+        $request->validate([
+            'nama_mk' => 'required|string|max:255',
+            'sks' => 'required|integer',
         ]);
 
-        return redirect()->to('/matakuliah');
+        MataKuliah::create([
+            'nama_mk' => $request->nama_mk,
+            'sks' => $request->sks,
+        ]);
+
+        return redirect('/matakuliah');
+    }
+
+    // Menampilkan form edit berdasarkan UUID
+    public function edit($id)
+    {
+        $mataKuliah = MataKuliah::where('id', $id)->firstOrFail();
+        return view('edit_mk', compact('mataKuliah'));
+    }
+
+    // Menyimpan hasil perubahan data ke database
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'nama_mk' => 'required|string|max:255',
+            'sks' => 'required|integer',
+        ]);
+
+        $mataKuliah = MataKuliah::where('id', $id)->firstOrFail();
+        $mataKuliah->update([
+            'nama_mk' => $request->nama_mk,
+            'sks' => $request->sks,
+        ]);
+
+        return redirect('/matakuliah');
+    }
+
+    // Menghapus data berdasarkan UUID
+    public function destroy($id)
+    {
+        $mataKuliah = MataKuliah::where('id', $id)->firstOrFail();
+        $mataKuliah->delete();
+
+        return redirect('/matakuliah');
     }
 }
